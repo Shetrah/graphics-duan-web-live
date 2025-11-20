@@ -17,163 +17,144 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: #f4faff;
-        margin: 0;
-        padding: 0;
-        -webkit-tap-highlight-color: transparent;
-    }
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f4faff;
+    margin: 0;
+    padding: 0;
+}
 
-    .header {
-        background: linear-gradient(135deg, #00c2ff, #005eff);
-        color: white;
-        padding: 25px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-bottom: 3px solid rgba(255,255,255,0.3);
-        font-size: 22px;
-        font-weight: 600;
-    }
+.header {
+    background: linear-gradient(135deg, #00c2ff, #005eff);
+    color: white;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-bottom: 3px solid rgba(255,255,255,0.3);
+    font-size: 22px;
+    font-weight: 600;
+}
 
-    /* Logo container – white oval */
-    .logo-container {
-        position: absolute;
-        left: 20px;
-        background: white;
-        padding: 10px 30px;
-        border-radius: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        animation: fadeIn 1.2s ease-out;
-        transition: 0.3s ease;
-    }
-    .logo-container:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
-    .logo-container img { height: 55px; }
+.logo-container {
+    position: absolute;
+    left: 20px;
+    background: white;
+    padding: 10px 30px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: 0.3s ease;
+}
+.logo-container:hover { transform: scale(1.05); }
+.logo-container img { height: 55px; }
 
-    @keyframes fadeIn {
-        0% { opacity: 0; transform: translateY(-10px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
+.header-title { text-align: center; width: 100%; }
 
-    .header-title { text-align: center; width: 100%; }
+.container { padding: 20px; max-width: 1100px; margin: auto; }
 
-    .container { padding: 20px; max-width: 1100px; margin: auto; }
+#searchBox {
+    padding: 12px;
+    width: 100%;
+    border: 2px solid #00bcd4;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0,188,212,0.3);
+}
+#searchBox:focus { box-shadow: 0 0 10px rgba(0,188,212,0.5); border-color: #009cb3; }
 
-    #searchBox {
-        padding: 12px;
-        width: 100%;
-        border: 2px solid #00bcd4;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        font-size: 16px;
-        outline: none;
-        box-shadow: 0 0 5px rgba(0,188,212,0.3);
-        transition: 0.25s ease;
-    }
-    #searchBox:focus {
-        box-shadow: 0 0 10px rgba(0,188,212,0.5);
-        border-color: #009cb3;
-    }
+select, button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #00bcd4;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+button:hover, select:hover { opacity: 0.85; }
 
-    select, button {
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid #00bcd4;
-        cursor: pointer;
-        font-weight: 600;
-        transition: 0.2s ease;
-    }
-    button:hover, select:hover { opacity: 0.85; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
+th {
+    padding: 12px;
+    background: #00bcd4;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    position: sticky;
+    top: 40px;
+    z-index: 9;
+}
 
-    th {
-        padding: 12px;
-        background: #00bcd4;
-        color: white;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 14px;
-        position: sticky;
-        top: 40px;
-        z-index: 9;
-    }
+.top-header-row th {
+    background: #006fe6 !important;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    text-align: center;
+}
 
-    .top-header-row th {
-        background: #006fe6 !important;
-        font-size: 15px;
-        font-weight: 700;
-        color: white;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        text-align: center;
-    }
+td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+tr:nth-child(even) { background: #f7fafd; }
+tr:hover { background: #e3f7ff; transition:0.2s; }
 
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-    tr:nth-child(even) { background: #f7fafd; }
-    tr:hover { background: #e3f7ff; transition:0.2s; }
+#pagination button {
+    padding: 8px 15px; margin: 3px;
+    border: none; border-radius: 6px;
+    cursor: pointer; background: #ff4d4d;
+    color: white; font-weight: 600; transition: 0.2s;
+}
+#pagination button:hover { background: #d90000; }
+#pagination button.active { background: #00bcd4; }
 
-    #pagination button {
-        padding: 8px 15px; margin: 3px;
-        border: none; border-radius: 6px;
-        cursor: pointer; background: #ff4d4d;
-        color: white; font-weight: 600; transition: 0.2s;
-    }
-    #pagination button:hover { background: #d90000; }
-    #pagination button.active { background: #00bcd4; }
+@media (max-width: 600px) {
+    th, td { padding: 8px; font-size: 12px; }
+    #searchBox { font-size: 14px; }
+    .logo-container { padding: 8px 20px; }
+}
 
-    @media (max-width: 600px) {
-        th, td { padding: 8px; font-size: 12px; }
-        #searchBox { font-size: 14px; }
-        .logo-container { padding: 8px 20px; }
-    }
+#error-msg { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
 
-    #error-msg { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
-
-    /* Back to Top Button */
-    #backTop {
-        position: fixed; bottom: 25px; right: 25px;
-        padding: 12px 15px; background: #005eff;
-        color: white; border: none; border-radius: 50%;
-        font-size: 20px; cursor: pointer;
-        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        transition: 0.3s ease;
-    }
-    #backTop:hover { transform: scale(1.15); }
+#backTop {
+    position: fixed; bottom: 25px; right: 25px;
+    padding: 12px 15px; background: #005eff;
+    color: white; border: none; border-radius: 50%;
+    font-size: 20px; cursor: pointer;
+    display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.3s ease;
+}
+#backTop:hover { transform: scale(1.15); }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
     <div class="logo-container">
         <img src="duan.png" alt="DUAN Logo">
     </div>
-    <div class="header-title">📊 GRAPHICS DESIGN WORK FLOW</div>
+    <div class="header-title">GRAPHICS DESIGN WORK FLOW</div>
 </div>
 
 <div class="container">
-    <!-- Filters + Export -->
     <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
         <select id="filterStaff"><option value="">All Staff</option></select>
         <select id="filterStatus"><option value="">All Status</option></select>
@@ -214,7 +195,6 @@ async function loadSheet() {
 
 let currentPage = 1;
 const rowsPerPage = 10;
-let sortDirection = {};
 let filteredData = null;
 
 function renderTable(data) {
@@ -235,12 +215,13 @@ function renderTable(data) {
     const end = start + rowsPerPage;
     data.slice(start,end).forEach(row=>{
         html+="<tr>";
-        row.forEach((cell, idx)=>{
-            if(idx===4){
+        row.forEach((cell,i)=>{
+            if(i===4){
                 let color="gray";
-                if(cell.toLowerCase().includes("done")) color="green";
-                else if(cell.toLowerCase().includes("pending")) color="red";
-                else if(cell.toLowerCase().includes("wip")||cell.toLowerCase().includes("in progress")) color="orange";
+                const val = cell.toLowerCase();
+                if(val.includes("done")) color="green";
+                else if(val.includes("pending")) color="red";
+                else if(val.includes("wip")||val.includes("in progress")) color="orange";
                 html+=`<td><span style="padding:4px 8px; border-radius:6px; background:${color}; color:white; font-weight:600;">${cell}</span></td>`;
             } else html+=`<td>${cell}</td>`;
         });
@@ -302,45 +283,58 @@ document.getElementById("exportExcel").addEventListener("click",()=>{
 
 document.getElementById("exportPDF").addEventListener("click",()=>{
     const { jsPDF }=window.jspdf;
-    const doc=new jsPDF();
-    let y=10;
-    window.originalData.forEach(row=>{doc.text(row.join(" | "),10,y); y+=10;});
+    const doc=new jsPDF({orientation:"landscape"});
+    const headers = ["Order No","Task","Responsible Staff","Progress","Status"];
+    const colWidths = [30,80,50,40,40];
+    let y = 15;
+
+    // Draw table headers
+    let x = 10;
+    headers.forEach((h,i)=>{doc.setFont(undefined,"bold"); doc.setTextColor(255,255,255); doc.setFillColor(0,111,230); doc.rect(x,y-8,colWidths[i],10,"F"); doc.text(h,x+2,y); x+=colWidths[i];});
+
+    y+=10;
+    window.originalData.slice(1).forEach(row=>{
+        x=10;
+        row.forEach((cell,i)=>{
+            doc.setFont(undefined,"normal"); doc.setTextColor(0,0,0);
+            if(i===4){
+                const val=cell.toLowerCase();
+                if(val.includes("done")) doc.setTextColor(0,128,0);
+                else if(val.includes("pending")) doc.setTextColor(255,0,0);
+                else if(val.includes("wip")||val.includes("in progress")) doc.setTextColor(255,140,0);
+            }
+            doc.text(cell,x+2,y);
+            x+=colWidths[i];
+        });
+        y+=10;
+        if(y>doc.internal.pageSize.getHeight()-20){ doc.addPage(); y=15; }
+    });
     doc.save("DUAN_Workflow.pdf");
 });
 
 function renderChart(data){
     const labels={};
     data.slice(1).forEach(r=>{
-        const week=r[0];
         const status=r[4].toLowerCase();
-        if(!labels[week]) labels[week]={done:0,pending:0,wip:0};
-        if(status.includes("done")) labels[week].done++;
-        else if(status.includes("pending")) labels[week].pending++;
-        else if(status.includes("wip")||status.includes("in progress")) labels[week].wip++;
+        if(!labels[status]) labels[status]=0;
+        labels[status]++;
     });
     const ctx=document.getElementById("analyticsChart").getContext("2d");
     new Chart(ctx,{
         type:"bar",
         data:{
             labels:Object.keys(labels),
-            datasets:[
-                {label:"Done", data:Object.values(labels).map(v=>v.done), backgroundColor:"green"},
-                {label:"Pending", data:Object.values(labels).map(v=>v.pending), backgroundColor:"red"},
-                {label:"WIP", data:Object.values(labels).map(v=>v.wip), backgroundColor:"orange"},
-            ]
+            datasets:[{label:"Tasks",data:Object.values(labels),backgroundColor:["green","red","orange"]}]
         },
-        options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}}
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
     });
 }
 
-// Back to Top button
 window.addEventListener("scroll",()=>{document.getElementById("backTop").style.display=window.scrollY>200?"block":"none";});
 document.getElementById("backTop").onclick=()=>{window.scrollTo({top:0,behavior:"smooth"});};
 
-// Load data every 60s
 loadSheet();
 setInterval(loadSheet,60000);
 </script>
-
 </body>
 </html>
