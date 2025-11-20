@@ -11,29 +11,65 @@
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="favicon.png">
 
+<!-- External Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
     body {
         font-family: 'Poppins', sans-serif;
         background: #f4faff;
         margin: 0;
         padding: 0;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .header {
         background: linear-gradient(135deg, #00c2ff, #005eff);
         color: white;
         padding: 25px;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        position: sticky;
+        top: 0;
+        z-index: 999;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-bottom: 3px solid rgba(255,255,255,0.3);
         font-size: 22px;
         font-weight: 600;
     }
 
-    .container {
-        padding: 20px;
-        max-width: 1100px;
-        margin: auto;
+    /* Logo container – white oval */
+    .logo-container {
+        position: absolute;
+        left: 20px;
+        background: white;
+        padding: 10px 30px;
+        border-radius: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        animation: fadeIn 1.2s ease-out;
+        transition: 0.3s ease;
     }
+    .logo-container:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .logo-container img { height: 55px; }
+
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-title { text-align: center; width: 100%; }
+
+    .container { padding: 20px; max-width: 1100px; margin: auto; }
 
     #searchBox {
         padding: 12px;
@@ -44,7 +80,22 @@
         font-size: 16px;
         outline: none;
         box-shadow: 0 0 5px rgba(0,188,212,0.3);
+        transition: 0.25s ease;
     }
+    #searchBox:focus {
+        box-shadow: 0 0 10px rgba(0,188,212,0.5);
+        border-color: #009cb3;
+    }
+
+    select, button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #00bcd4;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s ease;
+    }
+    button:hover, select:hover { opacity: 0.85; }
 
     table {
         width: 100%;
@@ -59,103 +110,108 @@
         padding: 12px;
         background: #00bcd4;
         color: white;
-        cursor: pointer;
         font-weight: 600;
         text-transform: uppercase;
         font-size: 14px;
         position: sticky;
+        top: 40px;
+        z-index: 9;
+    }
+
+    .top-header-row th {
+        background: #006fe6 !important;
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+        position: sticky;
         top: 0;
         z-index: 10;
+        text-align: center;
     }
 
-    th:hover {
-        background: #0097a7;
-    }
-
-    td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-    }
-
-    tr:nth-child(even) {
-        background: #f7fafd;
-    }
-
-    tr:hover {
-        background: #e3f7ff;
-    }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    tr:nth-child(even) { background: #f7fafd; }
+    tr:hover { background: #e3f7ff; transition:0.2s; }
 
     #pagination button {
-        padding: 8px 15px;
-        margin: 3px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        background: #ff4d4d;
-        color: white;
-        font-weight: 600;
-        transition: 0.2s;
+        padding: 8px 15px; margin: 3px;
+        border: none; border-radius: 6px;
+        cursor: pointer; background: #ff4d4d;
+        color: white; font-weight: 600; transition: 0.2s;
     }
-
-    #pagination button:hover {
-        background: #d90000;
-    }
-
-    #pagination button.active {
-        background: #00bcd4;
-    }
+    #pagination button:hover { background: #d90000; }
+    #pagination button.active { background: #00bcd4; }
 
     @media (max-width: 600px) {
         th, td { padding: 8px; font-size: 12px; }
         #searchBox { font-size: 14px; }
+        .logo-container { padding: 8px 20px; }
     }
 
-    /* Error message style */
-    #error-msg {
-        color: red;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 20px;
+    #error-msg { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
+
+    /* Back to Top Button */
+    #backTop {
+        position: fixed; bottom: 25px; right: 25px;
+        padding: 12px 15px; background: #005eff;
+        color: white; border: none; border-radius: 50%;
+        font-size: 20px; cursor: pointer;
+        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transition: 0.3s ease;
     }
+    #backTop:hover { transform: scale(1.15); }
 </style>
 </head>
 <body>
 
-<div class="header">📊 GRAPHICS DESIGN WORK FLOW</div>
+<!-- HEADER -->
+<div class="header">
+    <div class="logo-container">
+        <img src="duan.png" alt="DUAN Logo">
+    </div>
+    <div class="header-title">📊 GRAPHICS DESIGN WORK FLOW</div>
+</div>
 
 <div class="container">
+    <!-- Filters + Export -->
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
+        <select id="filterStaff"><option value="">All Staff</option></select>
+        <select id="filterStatus"><option value="">All Status</option></select>
+        <select id="filterProgress"><option value="">All Progress</option></select>
+        <button id="exportExcel">Export Excel</button>
+        <button id="exportPDF">Export PDF</button>
+    </div>
+
     <input id="searchBox" type="text" placeholder="Search anything…">
     <div id="sheet-table" style="overflow-x:auto;"></div>
+    <canvas id="analyticsChart" style="margin-top:30px; background:white; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.08); padding:15px;"></canvas>
     <div id="pagination" style="text-align:center; margin-top:20px;"></div>
     <div id="error-msg"></div>
 </div>
 
+<button id="backTop">⬆️</button>
+
 <script>
 async function loadSheet() {
     const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
-    
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to fetch Google Sheet");
-
+        if(!response.ok) throw new Error("Failed to fetch Google Sheet");
         const csv = await response.text();
         const rows = csv.split("\n").map(r => r.split(","));
-
         window.originalData = rows;
         renderTable(rows);
-
-        document.getElementById('error-msg').textContent = ""; // clear error if successful
-    } catch (err) {
-        console.error("Error loading sheet:", err);
-        document.getElementById('error-msg').textContent = "Error loading data. Please check your Google Sheet URL or network.";
-        // Show empty table to prevent white screen
+        populateFilters(rows);
+        renderChart(rows);
+        document.getElementById('error-msg').textContent = "";
+    } catch(err) {
+        console.error(err);
+        document.getElementById('error-msg').textContent = "Error loading data. Check Google Sheet URL or network.";
         document.getElementById('sheet-table').innerHTML = "<p style='text-align:center;color:#555;'>No data to display</p>";
         document.getElementById('pagination').innerHTML = "";
     }
 }
 
-// Table & Pagination variables
 let currentPage = 1;
 const rowsPerPage = 10;
 let sortDirection = {};
@@ -163,64 +219,127 @@ let filteredData = null;
 
 function renderTable(data) {
     filteredData = data;
+    let html = `<table><thead>
+        <tr class="top-header-row">
+            <th>Order No</th>
+            <th>Task</th>
+            <th>Responsible Staff</th>
+            <th>Progress</th>
+            <th>Status</th>
+        </tr>
+        <tr>`;
+    data[0].forEach(header => html += `<th>${header}</th>`);
+    html += `</tr></thead><tbody>`;
 
-    let html = "<table><thead><tr>";
-    data[0].forEach((header, i) => {
-        html += `<th onclick="sortTable(${i})">${header} ⬍</th>`;
-    });
-    html += "</tr></thead><tbody>";
-
-    const start = (currentPage - 1) * rowsPerPage + 1;
+    const start = (currentPage-1)*rowsPerPage +1;
     const end = start + rowsPerPage;
-
-    data.slice(start, end).forEach(row => {
-        html += "<tr>";
-        row.forEach(cell => { html += `<td>${cell}</td>`; });
-        html += "</tr>";
+    data.slice(start,end).forEach(row=>{
+        html+="<tr>";
+        row.forEach((cell, idx)=>{
+            if(idx===4){
+                let color="gray";
+                if(cell.toLowerCase().includes("done")) color="green";
+                else if(cell.toLowerCase().includes("pending")) color="red";
+                else if(cell.toLowerCase().includes("wip")||cell.toLowerCase().includes("in progress")) color="orange";
+                html+=`<td><span style="padding:4px 8px; border-radius:6px; background:${color}; color:white; font-weight:600;">${cell}</span></td>`;
+            } else html+=`<td>${cell}</td>`;
+        });
+        html+="</tr>";
     });
-
     html += "</tbody></table>";
     document.getElementById("sheet-table").innerHTML = html;
-
-    renderPagination(data.length - 1);
+    renderPagination(data.length-1);
 }
 
-function sortTable(i) {
-    let data = [...filteredData];
-    sortDirection[i] = sortDirection[i] === "asc" ? "desc" : "asc";
-    const dir = sortDirection[i];
-
-    const header = data.shift();
-    data.sort((a, b) => dir === "asc" ? a[i].localeCompare(b[i]) : b[i].localeCompare(a[i]));
-    data.unshift(header);
-    currentPage = 1;
-    renderTable(data);
+function populateFilters(data){
+    const staffSet = new Set(), statusSet = new Set(), progressSet = new Set();
+    data.slice(1).forEach(r=>{
+        if(r[2]) staffSet.add(r[2]);
+        if(r[4]) statusSet.add(r[4]);
+        if(r[3]) progressSet.add(r[3]);
+    });
+    const staffSelect=document.getElementById("filterStaff");
+    staffSet.forEach(s=>staffSelect.innerHTML+=`<option value="${s}">${s}</option>`);
+    const statusSelect=document.getElementById("filterStatus");
+    statusSet.forEach(s=>statusSelect.innerHTML+=`<option value="${s}">${s}</option>`);
+    const progressSelect=document.getElementById("filterProgress");
+    progressSet.forEach(s=>progressSelect.innerHTML+=`<option value="${s}">${s}</option>`);
 }
 
-document.getElementById("searchBox").addEventListener("input", function() {
-    const q = this.value.toLowerCase();
-    const result = window.originalData.filter(r => r.join(" ").toLowerCase().includes(q));
-    currentPage = 1;
-    renderTable(result);
+document.getElementById("filterStaff").addEventListener("change", applyFilters);
+document.getElementById("filterStatus").addEventListener("change", applyFilters);
+document.getElementById("filterProgress").addEventListener("change", applyFilters);
+document.getElementById("searchBox").addEventListener("input", applyFilters);
+
+function applyFilters(){
+    const staff=document.getElementById("filterStaff").value;
+    const status=document.getElementById("filterStatus").value;
+    const progress=document.getElementById("filterProgress").value;
+    const filtered = window.originalData.filter((r,i)=>{
+        if(i===0) return true;
+        return (!staff||r[2]===staff)&&(!status||r[4]===status)&&(!progress||r[3]===progress)&&
+               (!document.getElementById("searchBox").value||r.join(" ").toLowerCase().includes(document.getElementById("searchBox").value.toLowerCase()));
+    });
+    currentPage=1;
+    renderTable(filtered);
+}
+
+function renderPagination(total){
+    const totalPages = Math.ceil(total/rowsPerPage);
+    let btns="";
+    for(let i=1;i<=totalPages;i++) btns+=`<button class="${i===currentPage?"active":""}" onclick="goToPage(${i})">${i}</button>`;
+    document.getElementById("pagination").innerHTML=btns;
+}
+
+function goToPage(p){ currentPage=p; renderTable(filteredData); }
+
+document.getElementById("exportExcel").addEventListener("click",()=>{
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(window.originalData);
+    XLSX.utils.book_append_sheet(wb,ws,"Sheet1");
+    XLSX.writeFile(wb,"DUAN_Workflow.xlsx");
 });
 
-function renderPagination(total) {
-    const totalPages = Math.ceil(total / rowsPerPage);
-    let btns = "";
-    for (let i = 1; i <= totalPages; i++) {
-        btns += `<button class="${i === currentPage ? "active" : ""}" onclick="goToPage(${i})">${i}</button>`;
-    }
-    document.getElementById("pagination").innerHTML = btns;
+document.getElementById("exportPDF").addEventListener("click",()=>{
+    const { jsPDF }=window.jspdf;
+    const doc=new jsPDF();
+    let y=10;
+    window.originalData.forEach(row=>{doc.text(row.join(" | "),10,y); y+=10;});
+    doc.save("DUAN_Workflow.pdf");
+});
+
+function renderChart(data){
+    const labels={};
+    data.slice(1).forEach(r=>{
+        const week=r[0];
+        const status=r[4].toLowerCase();
+        if(!labels[week]) labels[week]={done:0,pending:0,wip:0};
+        if(status.includes("done")) labels[week].done++;
+        else if(status.includes("pending")) labels[week].pending++;
+        else if(status.includes("wip")||status.includes("in progress")) labels[week].wip++;
+    });
+    const ctx=document.getElementById("analyticsChart").getContext("2d");
+    new Chart(ctx,{
+        type:"bar",
+        data:{
+            labels:Object.keys(labels),
+            datasets:[
+                {label:"Done", data:Object.values(labels).map(v=>v.done), backgroundColor:"green"},
+                {label:"Pending", data:Object.values(labels).map(v=>v.pending), backgroundColor:"red"},
+                {label:"WIP", data:Object.values(labels).map(v=>v.wip), backgroundColor:"orange"},
+            ]
+        },
+        options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}}
+    });
 }
 
-function goToPage(p) {
-    currentPage = p;
-    renderTable(filteredData);
-}
+// Back to Top button
+window.addEventListener("scroll",()=>{document.getElementById("backTop").style.display=window.scrollY>200?"block":"none";});
+document.getElementById("backTop").onclick=()=>{window.scrollTo({top:0,behavior:"smooth"});};
 
-// Load sheet and auto-refresh every 60s
+// Load data every 60s
 loadSheet();
-setInterval(loadSheet, 60000);
+setInterval(loadSheet,60000);
 </script>
 
 </body>
