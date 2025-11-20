@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Data Table</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="duan logo 2.png">
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: #f4faff;
+        margin: 0;
+        padding: 0;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #00c2ff, #005eff);
+        color: white;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .container {
+        padding: 20px;
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    #searchBox {
+        padding: 12px;
+        width: 100%;
+        border: 2px solid #00bcd4;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 16px;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0,188,212,0.3);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    th {
+        padding: 12px;
+        background: #00bcd4;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    th:hover {
+        background: #0097a7;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    tr:nth-child(even) {
+        background: #f7fafd;
+    }
+
+    tr:hover {
+        background: #e3f7ff;
+    }
+
+    #pagination button {
+        padding: 8px 15px;
+        margin: 3px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #ff4d4d;
+        color: white;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    #pagination button:hover {
+        background: #d90000;
+    }
+
+    #pagination button.active {
+        background: #00bcd4;
+    }
+
+    @media (max-width: 600px) {
+        th, td { padding: 8px; font-size: 12px; }
+        #searchBox { font-size: 14px; }
+    }
+
+    /* Error message style */
+    #error-msg {
+        color: red;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">📊 LIVE WORKFLOW DATA TABLE</div>
+
+<div class="container">
+    <input id="searchBox" type="text" placeholder="Search anything…">
+    <div id="sheet-table" style="overflow-x:auto;"></div>
+    <div id="pagination" style="text-align:center; margin-top:20px;"></div>
+    <div id="error-msg"></div>
+</div>
+
+<script>
+async function loadSheet() {
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch Google Sheet");
+
+        const csv = await response.text();
+        const rows = csv.split("\n").map(r => r.split(","));
+
+        window.originalData = rows;
+        renderTable(rows);
+
+        document.getElementById('error-msg').textContent = ""; // clear error if successful
+    } catch (err) {
+        console.error("Error loading sheet:", err);
+        document.getElementById('error-msg').textContent = "Error loading data. Please check your Google Sheet URL or network.";
+        // Show empty table to prevent white screen
+        document.getElementById('sheet-table').innerHTML = "<p style='text-align:center;color:#555;'>No data to display</p>";
+        document.getElementById('pagination').innerHTML = "";
+    }
+}
+
+// Table & Pagination variables
+let currentPage = 1;
+const rowsPerPage = 10;
+let sortDirection = {};
+let filteredData = null;
+
+function renderTable(data) {
+    filteredData = data;
+
+    let html = "<table><thead><tr>";
+    data[0].forEach((header, i) => {
+        html += `<th onclick="sortTable(${i})">${header} ⬍</th>`;
+    });
+    html += "</tr></thead><tbody>";
+
+    const start = (currentPage - 1) * rowsPerPage + 1;
+    const end = start + rowsPerPage;
+
+    data.slice(start, end).forEach(row => {
+        html += "<tr>";
+        row.forEach(cell => { html += `<td>${cell}</td>`; });
+        html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+    document.getElementById("sheet-table").innerHTML = html;
+
+    renderPagination(data.length - 1);
+}
+
+function sortTable(i) {
+    let data = [...filteredData];
+    sortDirection[i] = sortDirection[i] === "asc" ? "desc" : "asc";
+    const dir = sortDirection[i];
+
+    const header = data.shift();
+    data.sort((a, b) => dir === "asc" ? a[i].localeCompare(b[i]) : b[i].localeCompare(a[i]));
+    data.unshift(header);
+    currentPage = 1;
+    renderTable(data);
+}
+
+document.getElementById("searchBox").addEventListener("input", function() {
+    const q = this.value.toLowerCase();
+    const result = window.originalData.filter(r => r.join(" ").toLowerCase().includes(q));
+    currentPage = 1;
+    renderTable(result);
+});
+
+function renderPagination(total) {
+    const totalPages = Math.ceil(total / rowsPerPage);
+    let btns = "";
+    for (let i = 1; i <= totalPages; i++) {
+        btns += `<button class="${i === currentPage ? "active" : ""}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    document.getElementById("pagination").innerHTML = btns;
+}
+
+function goToPage(p) {
+    currentPage = p;
+    renderTable(filteredData);
+}
+
+// Load sheet and auto-refresh every 60s
+loadSheet();
+setInterval(loadSheet, 60000);
+</script>
+
+</body>
+</html>
