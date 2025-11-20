@@ -11,23 +11,54 @@
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="favicon.png">
 
-<!-- External Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
 body {
     font-family: 'Poppins', sans-serif;
     background: #f4faff;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
 }
 
+/* ------------------- Loader ------------------- */
+#loader {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+#loader img {
+    width:150px; /* resized to exact original proportion */
+    height:auto;
+    animation: blinkZoom 1.5s infinite alternate;
+}
+
+#loader p {
+    margin-top:15px;
+    font-weight:600;
+    font-size:18px;
+    text-align:center;
+    color:#005eff;
+    max-width:80%;
+}
+
+@keyframes blinkZoom {
+    0% { transform: scale(1); opacity:1; }
+    50% { transform: scale(1.2); opacity:0.6; }
+    100% { transform: scale(1); opacity:1; }
+}
+
+/* ------------------- Header ------------------- */
 .header {
     background: linear-gradient(135deg, #00c2ff, #005eff);
     color: white;
-    padding: 25px;
+    padding: 25px 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -36,8 +67,6 @@ body {
     z-index: 999;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     border-bottom: 3px solid rgba(255,255,255,0.3);
-    font-size: 22px;
-    font-weight: 600;
 }
 
 .logo-container {
@@ -50,14 +79,18 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: 0.3s ease;
 }
-.logo-container:hover { transform: scale(1.05); }
 .logo-container img { height: 55px; }
 
-.header-title { text-align: center; width: 100%; }
+.header-title {
+    text-align: center;
+    width: 100%;
+    font-size:22px;
+    font-weight:600;
+}
 
-.container { padding: 20px; max-width: 1100px; margin: auto; }
+/* ------------------- Container ------------------- */
+.container { padding: 20px; max-width: 1100px; margin:auto; }
 
 #searchBox {
     padding: 12px;
@@ -69,7 +102,7 @@ body {
     outline: none;
     box-shadow: 0 0 5px rgba(0,188,212,0.3);
 }
-#searchBox:focus { box-shadow: 0 0 10px rgba(0,188,212,0.5); border-color: #009cb3; }
+#searchBox:focus { box-shadow: 0 0 10px rgba(0,188,212,0.5); border-color:#009cb3; }
 
 select, button {
     padding: 8px 12px;
@@ -77,10 +110,11 @@ select, button {
     border: 1px solid #00bcd4;
     cursor: pointer;
     font-weight: 600;
-    transition: 0.2s ease;
+    transition:0.2s ease;
 }
-button:hover, select:hover { opacity: 0.85; }
+button:hover, select:hover { opacity:0.85; }
 
+/* ------------------- Table ------------------- */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -108,52 +142,72 @@ th {
     font-weight: 700;
     color: white;
     position: sticky;
-    top: 0;
-    z-index: 10;
-    text-align: center;
+    top:0;
+    z-index:10;
+    text-align:center;
 }
 
-td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-tr:nth-child(even) { background: #f7fafd; }
-tr:hover { background: #e3f7ff; transition:0.2s; }
-
-#pagination button {
-    padding: 8px 15px; margin: 3px;
-    border: none; border-radius: 6px;
-    cursor: pointer; background: #ff4d4d;
-    color: white; font-weight: 600; transition: 0.2s;
-}
-#pagination button:hover { background: #d90000; }
-#pagination button.active { background: #00bcd4; }
-
-@media (max-width: 600px) {
-    th, td { padding: 8px; font-size: 12px; }
-    #searchBox { font-size: 14px; }
-    .logo-container { padding: 8px 20px; }
+td { 
+    padding: 10px; 
+    border-bottom:1px solid #eee; 
+    font-size:14px; 
+    position: relative;
 }
 
-#error-msg { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
+/* Status column colors */
+td.status-notstarted { background:#00ffff; color:#000; font-weight:600; text-align:center; }
+td.status-inprogress { background:#ff9800; color:#fff; font-weight:600; text-align:center; }
+td.status-overdue { background:#ff4d4d; color:#fff; font-weight:600; text-align:center; }
+td.status-completed { background:#28a745; color:#fff; font-weight:600; text-align:center; }
+
+/* Pagination */
+#pagination button{
+    padding: 8px 15px; margin:3px;
+    border:none; border-radius:6px;
+    cursor:pointer; background:#ff4d4d;
+    color:white; font-weight:600; transition:0.2s;
+}
+#pagination button:hover{ background:#d90000; }
+#pagination button.active{ background:#00bcd4; }
+
+@media (max-width:600px){
+    th, td{ padding:8px; font-size:12px; }
+    #searchBox{ font-size:14px; }
+    .logo-container{ padding:8px 20px; }
+    .header-title{ font-size:18px; }
+}
+
+/* Error & back to top */
+#error-msg{ color:red; font-weight:bold; text-align:center; margin-top:20px; }
 
 #backTop {
-    position: fixed; bottom: 25px; right: 25px;
-    padding: 12px 15px; background: #005eff;
-    color: white; border: none; border-radius: 50%;
-    font-size: 20px; cursor: pointer;
-    display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: 0.3s ease;
+    position: fixed; bottom:25px; right:25px;
+    padding:12px 15px; background:#005eff;
+    color:white; border:none; border-radius:50%;
+    font-size:20px; cursor:pointer;
+    display:none; box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    transition:0.3s ease;
 }
-#backTop:hover { transform: scale(1.15); }
+#backTop:hover{ transform:scale(1.15); }
 </style>
 </head>
 <body>
 
+<!-- Loader -->
+<div id="loader">
+    <img src="duan.png" alt="DUAN Logo">
+    <p>Duan Labels Graphics — Engineering Creativity That Makes Brands Unforgettable.</p>
+</div>
+
+<!-- Header -->
 <div class="header">
     <div class="logo-container">
         <img src="duan.png" alt="DUAN Logo">
     </div>
-    <div class="header-title">GRAPHICS DESIGN WORK FLOW</div>
+    <div class="header-title">📊 GRAPHICS DESIGN WORK FLOW</div>
 </div>
 
+<!-- Main Container -->
 <div class="container">
     <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:center;">
         <select id="filterStaff"><option value="">All Staff</option></select>
@@ -165,176 +219,136 @@ tr:hover { background: #e3f7ff; transition:0.2s; }
 
     <input id="searchBox" type="text" placeholder="Search anything…">
     <div id="sheet-table" style="overflow-x:auto;"></div>
-    <canvas id="analyticsChart" style="margin-top:30px; background:white; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.08); padding:15px;"></canvas>
     <div id="pagination" style="text-align:center; margin-top:20px;"></div>
     <div id="error-msg"></div>
 </div>
 
 <button id="backTop">⬆️</button>
 
+<!-- External Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
-async function loadSheet() {
-    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
-    try {
-        const response = await fetch(url);
-        if(!response.ok) throw new Error("Failed to fetch Google Sheet");
-        const csv = await response.text();
-        const rows = csv.split("\n").map(r => r.split(","));
-        window.originalData = rows;
+function hideLoader(){ document.getElementById("loader").style.display="none"; }
+
+let currentPage=1;
+const rowsPerPage=10;
+let filteredData=null;
+let previousData=[];
+
+async function loadSheet(){
+    const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
+    try{
+        const res=await fetch(url);
+        if(!res.ok) throw new Error("Failed to fetch sheet");
+        const csv=await res.text();
+        const rows=csv.split("\n").map(r=>r.split(","));
+        window.originalData=rows;
         renderTable(rows);
         populateFilters(rows);
-        renderChart(rows);
-        document.getElementById('error-msg').textContent = "";
-    } catch(err) {
+        hideLoader();
+        document.getElementById('error-msg').textContent="";
+    }catch(err){
         console.error(err);
-        document.getElementById('error-msg').textContent = "Error loading data. Check Google Sheet URL or network.";
-        document.getElementById('sheet-table').innerHTML = "<p style='text-align:center;color:#555;'>No data to display</p>";
-        document.getElementById('pagination').innerHTML = "";
+        document.getElementById('error-msg').textContent="Error loading data.";
+        document.getElementById('sheet-table').innerHTML="<p style='text-align:center;color:#555;'>No data to display</p>";
+        hideLoader();
     }
 }
 
-let currentPage = 1;
-const rowsPerPage = 10;
-let filteredData = null;
-
-function renderTable(data) {
-    filteredData = data;
-    let html = `<table><thead>
+function renderTable(data){
+    filteredData=data;
+    let html=`<table><thead>
         <tr class="top-header-row">
-            <th>Order No</th>
-            <th>Task</th>
-            <th>Responsible Staff</th>
-            <th>Progress</th>
-            <th>Status</th>
+            <th>Order No</th><th>Task</th><th>Responsible Staff</th><th>Progress</th><th>Status</th>
         </tr>
-        <tr>`;
-    data[0].forEach(header => html += `<th>${header}</th>`);
-    html += `</tr></thead><tbody>`;
+    </thead><tbody>`;
 
-    const start = (currentPage-1)*rowsPerPage +1;
-    const end = start + rowsPerPage;
-    data.slice(start,end).forEach(row=>{
+    const start=(currentPage-1)*rowsPerPage+1;
+    const end=start+rowsPerPage;
+
+    data.slice(start,end).forEach((row,rowIndex)=>{
         html+="<tr>";
         row.forEach((cell,i)=>{
-            if(i===4){
-                let color="gray";
-                const val = cell.toLowerCase();
-                if(val.includes("done")) color="green";
-                else if(val.includes("pending")) color="red";
-                else if(val.includes("wip")||val.includes("in progress")) color="orange";
-                html+=`<td><span style="padding:4px 8px; border-radius:6px; background:${color}; color:white; font-weight:600;">${cell}</span></td>`;
-            } else html+=`<td>${cell}</td>`;
+            let tooltip=cell.length>20?cell:"";
+            if(i===4){ // Status
+                let statusText=(cell||"").trim().toLowerCase();
+                let cls="";
+                if(statusText.includes("not started")) cls="status-notstarted";
+                else if(statusText.includes("in progress")) cls="status-inprogress";
+                else if(statusText.includes("overdue")) cls="status-overdue";
+                else if(statusText.includes("completed")) cls="status-completed";
+                html+=`<td class="${cls}" data-tooltip="${tooltip}">${cell}</td>`;
+            } else {
+                html+=`<td data-tooltip="${tooltip}">${cell}</td>`;
+            }
         });
         html+="</tr>";
     });
-    html += "</tbody></table>";
-    document.getElementById("sheet-table").innerHTML = html;
+
+    html+="</tbody></table>";
+    document.getElementById("sheet-table").innerHTML=html;
     renderPagination(data.length-1);
 }
 
-function populateFilters(data){
-    const staffSet = new Set(), statusSet = new Set(), progressSet = new Set();
-    data.slice(1).forEach(r=>{
-        if(r[2]) staffSet.add(r[2]);
-        if(r[4]) statusSet.add(r[4]);
-        if(r[3]) progressSet.add(r[3]);
-    });
-    const staffSelect=document.getElementById("filterStaff");
-    staffSet.forEach(s=>staffSelect.innerHTML+=`<option value="${s}">${s}</option>`);
-    const statusSelect=document.getElementById("filterStatus");
-    statusSet.forEach(s=>statusSelect.innerHTML+=`<option value="${s}">${s}</option>`);
-    const progressSelect=document.getElementById("filterProgress");
-    progressSet.forEach(s=>progressSelect.innerHTML+=`<option value="${s}">${s}</option>`);
-}
-
-document.getElementById("filterStaff").addEventListener("change", applyFilters);
-document.getElementById("filterStatus").addEventListener("change", applyFilters);
-document.getElementById("filterProgress").addEventListener("change", applyFilters);
-document.getElementById("searchBox").addEventListener("input", applyFilters);
-
-function applyFilters(){
-    const staff=document.getElementById("filterStaff").value;
-    const status=document.getElementById("filterStatus").value;
-    const progress=document.getElementById("filterProgress").value;
-    const filtered = window.originalData.filter((r,i)=>{
-        if(i===0) return true;
-        return (!staff||r[2]===staff)&&(!status||r[4]===status)&&(!progress||r[3]===progress)&&
-               (!document.getElementById("searchBox").value||r.join(" ").toLowerCase().includes(document.getElementById("searchBox").value.toLowerCase()));
-    });
-    currentPage=1;
-    renderTable(filtered);
-}
-
 function renderPagination(total){
-    const totalPages = Math.ceil(total/rowsPerPage);
+    const totalPages=Math.ceil(total/rowsPerPage);
     let btns="";
-    for(let i=1;i<=totalPages;i++) btns+=`<button class="${i===currentPage?"active":""}" onclick="goToPage(${i})">${i}</button>`;
+    for(let i=1;i<=totalPages;i++){
+        btns+=`<button class="${i===currentPage?"active":""}" onclick="goToPage(${i})">${i}</button>`;
+    }
     document.getElementById("pagination").innerHTML=btns;
 }
-
 function goToPage(p){ currentPage=p; renderTable(filteredData); }
 
-document.getElementById("exportExcel").addEventListener("click",()=>{
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.aoa_to_sheet(window.originalData);
-    XLSX.utils.book_append_sheet(wb,ws,"Sheet1");
-    XLSX.writeFile(wb,"DUAN_Workflow.xlsx");
-});
-
-document.getElementById("exportPDF").addEventListener("click",()=>{
-    const { jsPDF }=window.jspdf;
-    const doc=new jsPDF({orientation:"landscape"});
-    const headers = ["Order No","Task","Responsible Staff","Progress","Status"];
-    const colWidths = [30,80,50,40,40];
-    let y = 15;
-
-    // Draw table headers
-    let x = 10;
-    headers.forEach((h,i)=>{doc.setFont(undefined,"bold"); doc.setTextColor(255,255,255); doc.setFillColor(0,111,230); doc.rect(x,y-8,colWidths[i],10,"F"); doc.text(h,x+2,y); x+=colWidths[i];});
-
-    y+=10;
-    window.originalData.slice(1).forEach(row=>{
-        x=10;
-        row.forEach((cell,i)=>{
-            doc.setFont(undefined,"normal"); doc.setTextColor(0,0,0);
-            if(i===4){
-                const val=cell.toLowerCase();
-                if(val.includes("done")) doc.setTextColor(0,128,0);
-                else if(val.includes("pending")) doc.setTextColor(255,0,0);
-                else if(val.includes("wip")||val.includes("in progress")) doc.setTextColor(255,140,0);
-            }
-            doc.text(cell,x+2,y);
-            x+=colWidths[i];
-        });
-        y+=10;
-        if(y>doc.internal.pageSize.getHeight()-20){ doc.addPage(); y=15; }
-    });
-    doc.save("DUAN_Workflow.pdf");
-});
-
-function renderChart(data){
-    const labels={};
-    data.slice(1).forEach(r=>{
-        const status=r[4].toLowerCase();
-        if(!labels[status]) labels[status]=0;
-        labels[status]++;
-    });
-    const ctx=document.getElementById("analyticsChart").getContext("2d");
-    new Chart(ctx,{
-        type:"bar",
-        data:{
-            labels:Object.keys(labels),
-            datasets:[{label:"Tasks",data:Object.values(labels),backgroundColor:["green","red","orange"]}]
-        },
-        options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-}
-
+// Back to top
 window.addEventListener("scroll",()=>{document.getElementById("backTop").style.display=window.scrollY>200?"block":"none";});
 document.getElementById("backTop").onclick=()=>{window.scrollTo({top:0,behavior:"smooth"});};
 
+// Filters
+function populateFilters(data){
+    const staffSet=new Set(); const statusSet=new Set(); const progressSet=new Set();
+    data.slice(1).forEach(r=>{ staffSet.add(r[2]); statusSet.add(r[4]); progressSet.add(r[3]); });
+    const fs=document.getElementById("filterStaff"), fstatus=document.getElementById("filterStatus"), fprog=document.getElementById("filterProgress");
+    staffSet.forEach(s=>{fs.innerHTML+=`<option value="${s}">${s}</option>`;});
+    statusSet.forEach(s=>{fstatus.innerHTML+=`<option value="${s}">${s}</option>`;});
+    progressSet.forEach(s=>{fprog.innerHTML+=`<option value="${s}">${s}</option>`;});
+    [fs,fstatus,fprog].forEach(sel=>{ sel.addEventListener("change",filterTable); });
+}
+
+function filterTable(){
+    const staff=document.getElementById("filterStaff").value.toLowerCase();
+    const status=document.getElementById("filterStatus").value.toLowerCase();
+    const progress=document.getElementById("filterProgress").value.toLowerCase();
+    const q=document.getElementById("searchBox").value.toLowerCase();
+    const filtered=window.originalData.filter(r=>{
+        const rowStr=r.join(" ").toLowerCase();
+        return (staff===""||r[2].toLowerCase().includes(staff)) &&
+               (status===""||r[4].toLowerCase().includes(status)) &&
+               (progress===""||r[3].toLowerCase().includes(progress)) &&
+               rowStr.includes(q);
+    });
+    currentPage=1; renderTable(filtered);
+}
+document.getElementById("searchBox").addEventListener("input",filterTable);
+
+// Export
+document.getElementById("exportExcel").onclick=()=>{
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.table_to_sheet(document.querySelector("table"));
+    XLSX.utils.book_append_sheet(wb,ws,"Sheet1");
+    XLSX.writeFile(wb,"DuanGraphics.xlsx");
+};
+document.getElementById("exportPDF").onclick=()=>{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l','pt','a4');
+    doc.html(document.querySelector("table"),{callback:function(pdf){pdf.save("DuanGraphics.pdf");},x:20,y:20,html2canvas:{scale:0.6}});
+};
+
+// Load
 loadSheet();
-setInterval(loadSheet,60000);
+setInterval(loadSheet,1000); // Refresh every second
 </script>
 </body>
 </html>
