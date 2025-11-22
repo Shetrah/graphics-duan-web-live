@@ -5,352 +5,571 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>DUAN GRAPHICS WORKFLOW</title>
 
-<!-- Google Fonts -->
+<!-- Google font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-<!-- Favicon -->
-<link rel="icon" type="image/png" href="favicon.png">
+<!-- Google Sheet CSV URL -->
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
+</script>
 
-<!-- External libs (Excel + PDF) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- jsPDF/html2canvas/xlsx for exports -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-/* Base */
-body { font-family: 'Poppins', sans-serif; background:#f4faff; margin:0; padding:0; overflow-x:hidden; }
+:root{
+  --cyan: #00c2ff;
+  --orange: #ff9800;
+  --red: #dc3545;
+  --green: #28a745;
+  --accent: #006fe6;
+  --muted: #f4faff;
+  --card: #ffffff;
+  --text: #0b2545;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Poppins',sans-serif;
+  background:var(--muted);
+  margin:0;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
 /* Loader */
 #loader {
-  position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:#fff; z-index:9999;
+  position:fixed; inset:0;
+  background:#fff;
+  display:flex; flex-direction:column; gap:12px;
+  align-items:center; justify-content:center;
+  z-index:9999;
 }
-#loader img{ width:140px; height:auto; animation: blinkZoom 1.2s infinite alternate; }
-#loader p{ margin-top:12px; font-weight:600; color:#005eff; text-align:center; max-width:80%; }
-@keyframes blinkZoom{ 0%{transform:scale(1);opacity:1} 50%{transform:scale(1.18);opacity:0.6} 100%{transform:scale(1);opacity:1} }
+#loader img{
+  width:140px; height:auto; border-radius:8px;
+  animation: blinkZoom 1.2s infinite alternate;
+}
+#loader p{ margin:0; font-weight:600; color:var(--accent); font-size:18px; text-align:center; max-width:90%; }
+
+@keyframes blinkZoom{
+  0%{transform:scale(1); opacity:1}
+  50%{transform:scale(1.18); opacity:0.6}
+  100%{transform:scale(1); opacity:1}
+}
 
 /* Header */
-.header {
-  background: linear-gradient(135deg,#00c2ff,#005eff);
-  color:#fff; padding:20px 24px; display:flex; align-items:center; gap:12px;
-  position:sticky; top:0; z-index:900; box-shadow:0 4px 8px rgba(0,0,0,0.08);
+.header{
+  background:linear-gradient(135deg,var(--cyan),#005eff);
+  color:#fff;
+  padding:18px 20px;
+  display:flex; align-items:center; gap:16px;
+  position:sticky; top:0; z-index:50;
+  /* slightly stronger but still soft drop shadow */
+  box-shadow:0 6px 18px rgba(2,12,27,0.12);
 }
-.logo-container {
-  background:#fff; padding:8px 18px; border-radius:100px; display:flex; align-items:center; justify-content:center;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+.logo-circle{
+  background:#fff; padding:6px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; 
+  position:relative; /* for glow pseudo-element */
 }
-.logo-container img{ height:52px; display:block; }
-.header-title{ font-size:20px; font-weight:600; width:100%; text-align:center; color:white; }
+.logo-circle::after{
+  /* soft glow around logo */
+  content:"";
+  position:absolute; inset:0; border-radius:12px;
+  box-shadow:0 8px 26px rgba(0,127,255,0.12), 0 2px 8px rgba(0,127,255,0.06) inset;
+  opacity:0; transition:opacity 420ms ease;
+  pointer-events:none;
+}
+.logo-circle.glow::after{ opacity:1; }
+.logo-circle img{ width:88px; height:auto; display:block; border-radius:8px; transform-origin:center center; }
 
-/* Container and controls */
-.container { max-width:1200px; margin:18px auto; padding:0 16px 40px; }
-.controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px; }
-.controls select, .controls button { padding:8px 12px; border-radius:8px; border:1px solid #00bcd4; background:#fff; cursor:pointer; font-weight:600; }
-.controls button.primary { background:#006fe6; color:#fff; border-color:transparent; }
-.controls button.ghost { background:#fff; color:#333; }
+/* Load animations */
+@keyframes logoEntrance {
+  0% { transform: translateY(-6px) scale(0.92) rotate(-4deg); opacity:0 }
+  60% { transform: translateY(2px) scale(1.06) rotate(2deg); opacity:1 }
+  100% { transform: translateY(0) scale(1) rotate(0); opacity:1 }
+}
+@keyframes glowPulse {
+  0% { box-shadow:0 8px 26px rgba(0,127,255,0.14); }
+  50% { box-shadow:0 12px 38px rgba(0,127,255,0.18); }
+  100% { box-shadow:0 8px 26px rgba(0,127,255,0.14); }
+}
+.logo-circle img.animate {
+  animation: logoEntrance 700ms cubic-bezier(.2,.9,.3,1) both;
+}
+.logo-circle.glow img.animate{ animation-delay:120ms; }
+.logo-circle.glow::after{ animation: glowPulse 2000ms ease-in-out infinite; }
+.header-title{ font-weight:700; font-size:18px; margin:0; flex:1; text-align:left; }
 
-/* Search */
-#searchBox { width:100%; padding:12px; border-radius:8px; border:2px solid #00bcd4; box-shadow:0 0 5px rgba(0,188,212,0.2); margin-bottom:12px; }
+/* Center the site title visually while keeping logo left and actions right */
+.header{ position:relative; }
+.header-title{
+  position:absolute; left:50%; transform:translateX(-50%);
+  margin:0; text-align:center; z-index:51;
+  font-weight:800; font-size:20px; letter-spacing:0.6px;
+  text-shadow:0 3px 10px rgba(0,0,0,0.18);
+  opacity:0; transform-origin:center; 
+  /* title entrance animation */
+  animation: titleEntrance 720ms cubic-bezier(.2,.9,.3,1) 200ms both;
+}
+
+@keyframes titleEntrance{
+  0% { transform: translateX(-50%) translateY(-8px) scale(0.98); opacity:0 }
+  60% { transform: translateX(-50%) translateY(2px) scale(1.02); opacity:1 }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity:1 }
+}
+
+/* Responsive adjustments */
+@media (max-width:800px){
+  .logo-circle img{ width:72px; }
+  .header-title{ font-size:18px; }
+}
+@media (max-width:520px){
+  .logo-circle img{ width:56px; }
+  .header-title{ position:static; transform:none; font-size:16px; margin-left:8px; }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-circle img.animate, .logo-circle.glow::after, .header-title { animation: none !important; transition: none !important; }
+}
+
+/* Container */
+.container{ max-width:1200px; margin:18px auto; padding:16px; }
+
+/* Controls */
+.controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+input#searchBox{ flex:1; min-width:180px; padding:10px 12px; border-radius:8px; border:2px solid #00bcd4; outline:none; }
+select, button{ padding:8px 12px; border-radius:8px; border:1px solid #00bcd4; background:#fff; cursor:pointer; font-weight:600; }
+button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+button:active{ transform:translateY(1px); }
 
 /* Table */
-.table-wrap{ overflow-x:auto; background:transparent; border-radius:10px; }
-table { width:100%; border-collapse:collapse; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.04); border-radius:10px; overflow:hidden; }
-thead th {
-  padding:12px; background:#006fe6; color:#fff; font-weight:700; text-transform:uppercase;
-  position:sticky; top:0; z-index:5; font-size:13px; text-align:center;
+.table-wrap{ overflow:auto; background:var(--card); border-radius:10px; box-shadow:0 6px 18px rgba(2,12,27,0.06); }
+table{ width:100%; border-collapse:collapse; min-width:900px; table-layout:fixed; }
+thead th{
+  position:sticky; top:0; background:var(--accent); color:#fff; padding:12px; text-transform:uppercase; font-size:12px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  z-index:3; text-align:center;
 }
-tbody td { padding:10px 12px; border-bottom:1px solid #f0f4f8; font-size:14px; text-align:center; vertical-align:middle; }
+thead .main-row th{ background:var(--accent); font-size:13px; }
+thead .sub-row th{ background:#f3f7fb; color:var(--text); font-weight:700; text-transform:none; font-size:13px; }
+
+/* Column widths (squeezed subcolumns under PROGRESS) */
+.col-order { width:110px; }
+.col-task  { width: 1fr; min-width: 220px; } /* will take remaining space but has min */
+.col-staff { width:140px; }
+.col-progress-sub { width:84px; } /* small width for checkboxes */
+.col-status { width:120px; }
+.col-date { width:110px; }
+.col-received { width:140px; }
+
+/* PROGRESS box styling */
+.progress-header{
+  display:inline-block;
+  background:linear-gradient(90deg,var(--accent),#0046d6);
+  color:#fff;
+  padding:6px 14px;
+  border-radius:10px;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Table cells */
+tbody td{ padding:10px 8px; border-bottom:1px solid #f0f3f6; text-align:center; vertical-align:middle; font-size:14px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* make checkboxes centered and scaled slightly for narrow columns */
+.chk { display:flex; gap:6px; justify-content:center; align-items:center; }
+.chk label { display:flex; gap:6px; align-items:center; font-weight:600; font-size:13px; color:var(--text); }
+.chk input[type="checkbox"]{ width:16px; height:16px; transform:scale(1.02); }
+
+/* Make completed/progress checkboxes show green when checked, even if disabled */
+.chk input[type="checkbox"]{
+  accent-color: var(--green);
+  transition: box-shadow 220ms ease, transform 180ms ease, opacity 180ms ease;
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+}
+.chk input[type="checkbox"]:checked{
+  /* ensure strong green visual on supported browsers */
+  box-shadow: 0 0 0 3px rgba(40,167,69,0.12) inset;
+}
+/* Keep disabled checkboxes visible (browsers may dim them) */
+.chk input[type="checkbox"][disabled]{
+  opacity:1; filter:none;
+}
+.chk input[type="checkbox"]:not(:checked){ transform:scale(1); }
+.chk input[type="checkbox"]:checked{ transform:scale(1.02); }
 
 /* Status colors */
-td.status-notstarted { background:#00c2ff; color:#000; font-weight:700; border-radius:6px; }
-td.status-inprogress { background:#ff9800; color:#fff; font-weight:700; border-radius:6px; }
-td.status-overdue { background:#dc3545; color:#fff; font-weight:700; border-radius:6px; }
-td.status-completed { background:#28a745; color:#fff; font-weight:700; border-radius:6px; }
+td.status-notstarted{ background:var(--cyan); color:#002133; font-weight:700; border-radius:6px; padding:8px; }
+td.status-inprogress{ background:var(--orange); color:#fff; font-weight:700; border-radius:6px; padding:8px; }
+td.status-overdue{ background:var(--red); color:#fff; font-weight:700; border-radius:6px; padding:8px; }
+td.status-completed{ background:var(--green); color:#fff; font-weight:700; border-radius:6px; padding:8px; }
 
-/* Pagination */
-#pagination{ text-align:center; margin-top:14px; }
-#pagination button{ margin:4px; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#ff4d4d; color:#fff; font-weight:700; }
-#pagination button.active{ background:#00bcd4; }
+.pagination{ text-align:center; padding:12px 0; }
+.pagination button{ margin:0 4px; }
 
-/* Back to top */
-#backTop{ position:fixed; right:18px; bottom:18px; border:none; background:#005eff; color:#fff; padding:12px 14px; border-radius:50%; font-size:16px; display:none; box-shadow:0 6px 16px rgba(0,0,0,0.12); cursor:pointer; }
-
-/* Responsive tweaks */
-@media (max-width:900px){
-  .controls{ gap:8px; }
-  thead th { font-size:12px; }
-  tbody td { font-size:13px; padding:9px; }
+@media (max-width:1100px){
+  .col-task { min-width: 180px; }
+  .col-order { width:90px; }
+  .col-stack { display:block; }
 }
+@media (max-width:900px){ table{ min-width:720px; } .header-title{ font-size:15px; } }
+@media (max-width:600px){ .container{ padding:10px; } thead .sub-row th{ font-size:12px; } tbody td{ font-size:13px; padding:8px; } }
 </style>
 </head>
 <body>
 
-<!-- Loader -->
 <div id="loader">
-  <img src="duan.png" alt="DUAN logo">
+  <img src="duan.png" alt="DUAN Logo">
   <p>Duan Labels Graphics — Engineering Creativity That Makes Brands Unforgettable.</p>
 </div>
 
-<!-- Header -->
 <header class="header">
-  <div class="logo-container"><img src="duan.png" alt="DUAN logo"></div>
-  <div class="header-title">📊 GRAPHICS DESIGN WORKFLOW</div>
+  <div class="logo-circle">
+     <img src="duan.png" alt="logo" id="site-logo">
+  </div>
+  <div class="header-title"> DUAN GRAPHICS WORKFLOW</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button id="exportExcel">Export Excel</button>
+    <button id="downloadPDF" class="primary">Download PDF</button>
+  </div>
 </header>
 
-<!-- Main -->
 <main class="container">
-  <div class="controls" style="justify-content:space-between; width:100%; gap:10px;">
-    <div style="display:flex; gap:10px; align-items:center;">
-      <select id="filterStaff"><option value="">All Staff</option></select>
-      <select id="filterStatus"><option value="">All Status</option></select>
-      <select id="filterProgress"><option value="">All Progress</option></select>
-      <select id="filterReceivedBy"><option value="">All Received By</option></select>
-    </div>
-
-    <div style="display:flex; gap:8px;">
-      <button id="exportExcel" class="ghost">Export Excel</button>
-      <button id="exportPDF" class="primary">Export PDF</button>
-    </div>
+  <div class="controls">
+    <input id="searchBox" placeholder="Search anything…" type="search" />
+    <select id="filterStaff"><option value="">All Staff</option></select>
+    <select id="filterStatus"><option value="">All Status</option></select>
+    <button id="clearFilters">Clear</button>
   </div>
 
-  <input id="searchBox" type="search" placeholder="Search anything…" />
+  <div class="table-wrap" id="table-wrap">
+    <table id="main-table" aria-describedby="sheet-table">
+      <colgroup>
+        <col class="col-order">
+        <col class="col-task">
+        <col class="col-staff">
+        <col class="col-progress-sub">
+        <col class="col-progress-sub">
+        <col class="col-progress-sub">
+        <col class="col-status">
+        <col class="col-date">
+        <col class="col-received">
+      </colgroup>
 
-  <div class="table-wrap" id="sheet-table" aria-live="polite"></div>
+      <thead>
+        <tr class="main-row">
+          <th rowspan="2">Order No</th>
+          <th rowspan="2">Task</th>
+          <th rowspan="2">Responsible Staff</th>
+          <th colspan="3"><span class="progress-header">PROGRESS</span></th>
+          <th rowspan="2">Status</th>
+          <th rowspan="2">Date</th>
+          <th rowspan="2">Received By</th>
+        </tr>
+        <tr class="sub-row">
+          <th>Designing</th>
+          <th>Plates</th>
+          <th>Knive</th>
+        </tr>
+      </thead>
 
-  <div id="pagination"></div>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
 
-  <div id="error-msg" role="alert" style="margin-top:12px;"></div>
+  <div class="pagination" id="pagination"></div>
+  <div id="error-msg" style="color:#b00020; text-align:center;"></div>
 </main>
-
-<button id="backTop" title="Back to top">⬆️</button>
 
 <script>
 /*
-  Expected Google Sheet column order (zero-based indices):
-  0: Order No
-  1: Task
-  2: Responsible Staff
-  3: Progress (text like "Not Started", "Designing", "Plates", etc.)
-  4: Status (e.g. "Not Started", "In Progress", "Overdue", "Completed")
-  5: Date (optional)
-  6: Received By  <-- new column (7th column)
+ Expected Google Sheet columns (0-based):
+ 0: Order No
+ 1: Task
+ 2: Responsible Staff
+ 3: Designing  (truthy => checked)
+ 4: Plates     (truthy => checked)
+ 5: Knive      (truthy => checked)
+ 6: Status     (text)
+ 7: Date       (text/date)
+ 8: Received By (text)
 */
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShpMBkjpHrb2-hEkXO2YoxJL4XYG5r4gZMrSi62E9451Ckt7KfeKTFQdyVx8iYsO5NOiyD8wJVOi9t/pub?gid=168886390&single=true&output=csv";
-
+const rowsPerPage = 12;
 let currentPage = 1;
-const rowsPerPage = 10;
-let originalData = [[]];
-let filteredData = [[]];
+let originalData = [];
+let filteredData = [];
 
-function hideLoader(){ const L = document.getElementById('loader'); if(L) L.style.display='none'; }
-function showError(msg){ const e = document.getElementById('error-msg'); e.textContent = msg || ""; }
-
-async function loadSheet(){
-  try{
-    const res = await fetch(CSV_URL);
-    if(!res.ok) throw new Error("Failed to fetch sheet (status " + res.status + ")");
-    const csv = await res.text();
-    // Basic CSV parse (splitting rows then cells). This assumes no embedded newlines or commas inside quoted cells.
-    const rows = csv.trim().split("\n").map(r => r.split(",").map(c => c.trim()));
-    if(rows.length === 0) throw new Error("No rows in sheet");
-    originalData = rows;
-    // Initialize filteredData as full dataset
-    filteredData = originalData;
-    renderTable(filteredData);
-    populateFilters(originalData);
-    showError("");
-    hideLoader();
-  } catch(err){
-    console.error(err);
-    showError("Error loading Google Sheet data. Check sheet publish settings and CSV link.");
-    document.getElementById('sheet-table').innerHTML = "<p style='text-align:center;color:#666;padding:18px;'>No data to display</p>";
-    hideLoader();
-  }
+function isCheckedValue(cell){
+  if(cell === undefined || cell === null) return false;
+  const s = String(cell).trim().toLowerCase();
+  if(!s) return false;
+  const truthy = ["1","true","yes","y","x","✓","checked","done"];
+  return truthy.some(t => s === t || s.includes(t));
 }
 
-function safeCell(row, idx){ return (row && row[idx] !== undefined) ? row[idx] : ""; }
+function statusClassFromCell(cell){
+  const s = String(cell||"").trim().toLowerCase();
+  if(s.includes("not") && s.includes("start")) return "status-notstarted";
+  if(s.includes("not started") || s === "not started") return "status-notstarted";
+  if(s.includes("in progress") || s.includes("inprogress") || s.includes("design")) return "status-inprogress";
+  if(s.includes("overdue") || s.includes("late")) return "status-overdue";
+  if(s.includes("complete") || s.includes("completed") || s.includes("done")) return "status-completed";
+  if(s === "") return "";
+  return "";
+}
 
 function renderTable(data){
-  // data includes header row at index 0
-  const header = data[0] || [];
-  const rows = data.slice(1); // actual data rows
+  // data expected: [ headerRow, ...rows ]
+  filteredData = data;
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+
+  // exclude header row when paging
+  const rows = data.slice(1);
   const start = (currentPage - 1) * rowsPerPage;
   const pageRows = rows.slice(start, start + rowsPerPage);
 
-  let html = `<table role="table" aria-label="Graphics workflow table"><thead><tr>
-    <th>Order No</th>
-    <th>Task</th>
-    <th>Responsible Staff</th>
-    <th>Progress</th>
-    <th>Status</th>
-    <th>Date</th>
-    <th>Received By</th>
-  </tr></thead><tbody>`;
+  if(pageRows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="9" style="padding:20px;text-align:center;color:#666">No data</td></tr>`;
+  } else {
+    for(const r of pageRows){
+      // normalize to length
+      const row = (r || []).map(c => (c === undefined ? "" : c));
 
-  pageRows.forEach((r) => {
-    // ensure we have at least 7 columns when rendering
-    const order = safeCell(r,0);
-    const task = safeCell(r,1);
-    const staff = safeCell(r,2);
-    const progressText = safeCell(r,3);
-    const statusTextRaw = safeCell(r,4);
-    const dateText = safeCell(r,5);
-    const receivedBy = safeCell(r,6);
+      const order = row[0] || "";
+      const task = row[1] || "";
+      const staff = row[2] || "";
 
-    // determine status class robustly
-    const s = (statusTextRaw || "").toString().trim().toLowerCase();
-    let statusClass = "";
-    if(s.includes("not started") || s.includes("notstarted") || s.includes("pending")) statusClass = "status-notstarted";
-    else if(s.includes("in progress") || s.includes("inprogress") || s.includes("designing")) statusClass = "status-inprogress";
-    else if(s.includes("overdue") || s.includes("late")) statusClass = "status-overdue";
-    else if(s.includes("completed") || s.includes("complete") || s.includes("done")) statusClass = "status-completed";
+      const designingCell = row[3] || "";
+      const platesCell = row[4] || "";
+      const kniveCell = row[5] || "";
+      const statusCell = row[6] || "";
+      const dateCell = row[7] || "";
+      const receivedCell = row[8] || "";
 
-    html += `<tr>
-      <td>${escapeHtml(order)}</td>
-      <td style="text-align:left; max-width:300px; white-space:pre-wrap;">${escapeHtml(task)}</td>
-      <td>${escapeHtml(staff)}</td>
-      <td>${escapeHtml(progressText)}</td>
-      <td class="${statusClass}">${escapeHtml(statusTextRaw)}</td>
-      <td>${escapeHtml(dateText)}</td>
-      <td>${escapeHtml(receivedBy)}</td>
-    </tr>`;
-  });
+      const dChecked = isCheckedValue(designingCell);
+      const pChecked = isCheckedValue(platesCell);
+      const kChecked = isCheckedValue(kniveCell);
+      const statusCls = statusClassFromCell(statusCell);
 
-  html += "</tbody></table>";
-  document.getElementById("sheet-table").innerHTML = html;
-  renderPagination(rows.length);
-}
+      const tr = document.createElement("tr");
 
-// simple HTML escaper
-function escapeHtml(str){
-  if(str === null || str === undefined) return "";
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'", "&#039;");
-}
+      const tdOrder = document.createElement("td"); tdOrder.textContent = order; tr.appendChild(tdOrder);
+      const tdTask = document.createElement("td"); tdTask.textContent = task; tdTask.title = task; tr.appendChild(tdTask);
+      const tdStaff = document.createElement("td"); tdStaff.textContent = staff; tr.appendChild(tdStaff);
 
-function renderPagination(totalRows){
-  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-  let out = "";
-  for(let i=1;i<=totalPages;i++){
-    out += `<button ${i===currentPage? 'class="active"':''} onclick="goToPage(${i})">${i}</button>`;
+      const tdD = document.createElement("td");
+      tdD.innerHTML = `<div class="chk" title="${String(designingCell)}"><label><input type="checkbox" ${dChecked ? "checked":""} disabled></label></div>`;
+      tr.appendChild(tdD);
+
+      const tdPl = document.createElement("td");
+      tdPl.innerHTML = `<div class="chk" title="${String(platesCell)}"><label><input type="checkbox" ${pChecked ? "checked":""} disabled></label></div>`;
+      tr.appendChild(tdPl);
+
+      const tdK = document.createElement("td");
+      tdK.innerHTML = `<div class="chk" title="${String(kniveCell)}"><label><input type="checkbox" ${kChecked ? "checked":""} disabled></label></div>`;
+      tr.appendChild(tdK);
+
+      const tdStatus = document.createElement("td"); tdStatus.textContent = statusCell || ""; if(statusCls) tdStatus.classList.add(statusCls); tr.appendChild(tdStatus);
+
+      const tdDate = document.createElement("td"); tdDate.textContent = dateCell || ""; tdDate.title = dateCell || ""; tr.appendChild(tdDate);
+      const tdReceived = document.createElement("td"); tdReceived.textContent = receivedCell || ""; tdReceived.title = receivedCell || ""; tr.appendChild(tdReceived);
+
+      tbody.appendChild(tr);
+    }
   }
-  document.getElementById("pagination").innerHTML = out;
-}
-function goToPage(p){ currentPage = p; renderTable(filteredData); }
 
-// Filters population
-function populateFilters(data){
-  // data[0] = header; data slice(1) = rows
-  const rows = data.slice(1);
-  const staffSet = new Set(), statusSet = new Set(), progressSet = new Set(), receivedSet = new Set();
-  rows.forEach(r=>{
-    staffSet.add(safeCell(r,2));
-    statusSet.add(safeCell(r,4));
-    progressSet.add(safeCell(r,3));
-    receivedSet.add(safeCell(r,6));
-  });
-
-  const sf = document.getElementById('filterStaff');
-  const st = document.getElementById('filterStatus');
-  const pr = document.getElementById('filterProgress');
-  const rb = document.getElementById('filterReceivedBy');
-
-  // Clear current options except default
-  [sf, st, pr, rb].forEach(sel=>{
-    // keep the first default option
-    sel.innerHTML = sel.options.length ? sel.options[0].outerHTML : '<option value="">All</option>';
-  });
-
-  Array.from(staffSet).filter(x=>x!=="").sort().forEach(s=> sf.innerHTML += `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`);
-  Array.from(statusSet).filter(x=>x!=="").sort().forEach(s=> st.innerHTML += `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`);
-  Array.from(progressSet).filter(x=>x!=="").sort().forEach(s=> pr.innerHTML += `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`);
-  Array.from(receivedSet).filter(x=>x!=="").sort().forEach(s=> rb.innerHTML += `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`);
+  renderPagination();
 }
 
-// small helper to escape attribute values
-function escapeAttr(s){ return String(s).replace(/"/g,'&quot;').replace(/'/g,"&#039;"); }
+function renderPagination(){
+  // Use the current filteredData (dataset including header at index 0)
+  const totalRows = Math.max(0, (filteredData.length - 1));
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  const wrap = document.getElementById("pagination");
+  wrap.innerHTML = "";
+  for(let i=1; i<=totalPages; i++){
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className = (i === currentPage) ? "active" : "";
+    btn.onclick = ()=>{ currentPage = i; renderTable(filteredData); };
+    wrap.appendChild(btn);
+  }
+}
 
-// Filtering function
-function filterTable(){
-  const staff = (document.getElementById('filterStaff').value || "").toLowerCase();
-  const status = (document.getElementById('filterStatus').value || "").toLowerCase();
-  const progress = (document.getElementById('filterProgress').value || "").toLowerCase();
-  const received = (document.getElementById('filterReceivedBy').value || "").toLowerCase();
-  const q = (document.getElementById('searchBox').value || "").toLowerCase();
+// basic CSV parse for Google Sheets published CSV (simple approach)
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/);
+  // map each line -> split by comma, but also handle quoted cells
+  return lines.map(line => {
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"' ){
+        // toggle or handle escaped quotes
+        if(inQuotes && i+1 < line.length && line[i+1] === '"'){
+          cur += '"'; i++; // skip escaped quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if(ch === ',' && !inQuotes){
+        result.push(cur);
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur);
+    // trim quotes and decode (safe)
+    return result.map(cell => cell.replace(/^"(.*)"$/,'$1').trim());
+  });
+}
 
-  // filter over originalData (which includes header)
-  const header = originalData[0] || [];
-  const rows = originalData.slice(1);
-  const filtered = rows.filter(r=>{
-    const staffCell = (safeCell(r,2) || "").toLowerCase();
-    const statusCell = (safeCell(r,4) || "").toLowerCase();
-    const progressCell = (safeCell(r,3) || "").toLowerCase();
-    const receivedCell = (safeCell(r,6) || "").toLowerCase();
-    const rowStr = r.join(" ").toLowerCase();
-    return (staff === "" || staffCell.includes(staff))
-        && (status === "" || statusCell.includes(status))
-        && (progress === "" || progressCell.includes(progress))
-        && (received === "" || receivedCell.includes(received))
-        && (q === "" || rowStr.includes(q));
+function populateFilters(rows){
+  const staffSet = new Set(), statusSet = new Set();
+  rows.slice(1).forEach(r => {
+    if(r[2]) staffSet.add(r[2]);
+    if(r[6]) statusSet.add(r[6]);
+  });
+  const fs = document.getElementById("filterStaff"), fstatus = document.getElementById("filterStatus");
+  // clear previous
+  fs.innerHTML = '<option value="">All Staff</option>';
+  fstatus.innerHTML = '<option value="">All Status</option>';
+  Array.from(staffSet).sort().forEach(s => { const o = document.createElement("option"); o.value = s; o.textContent = s; fs.appendChild(o); });
+  Array.from(statusSet).sort().forEach(s => { const o = document.createElement("option"); o.value = s; o.textContent = s; fstatus.appendChild(o); });
+}
+
+function applyFilters(resetPage = true){
+  const staff = document.getElementById("filterStaff").value.trim().toLowerCase();
+  const status = document.getElementById("filterStatus").value.trim().toLowerCase();
+  const q = document.getElementById("searchBox").value.trim().toLowerCase();
+
+  const filtered = originalData.slice(1).filter(r => {
+    const rowStr = (r.join(" ") || "").toLowerCase();
+    const staffMatch = !staff || (r[2] && r[2].toLowerCase().includes(staff));
+    const statusMatch = !status || (r[6] && r[6].toLowerCase().includes(status));
+    const searchMatch = !q || rowStr.includes(q);
+    return staffMatch && statusMatch && searchMatch;
   });
 
-  // reattach header for rendering functions
-  filteredData = [header, ...filtered];
+  // rebuild dataset with header then filtered rows
+  const dataset = [ originalData[0] || [] ].concat(filtered);
+  // preserve current page on silent updates unless requested
+  if(resetPage){
+    currentPage = 1;
+  } else {
+    // clamp currentPage to available pages
+    const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+    if(currentPage > totalPages) currentPage = totalPages;
+  }
+  renderTable(dataset);
+}
+
+async function loadSheet(silent = false){
+  try{
+    const res = await fetch(CSV_URL, { cache: "no-store" });
+    if(!res.ok) throw new Error("Fetch failed");
+    const txt = await res.text();
+    const rows = parseCSV(txt);
+    originalData = rows;
+    // update filter options (preserve current selection if possible)
+    const prevStaff = document.getElementById("filterStaff").value;
+    const prevStatus = document.getElementById("filterStatus").value;
+    populateFilters(rows);
+    // if previous selections existed, restore if still available
+    try{ document.getElementById("filterStaff").value = prevStaff; }catch(e){}
+    try{ document.getElementById("filterStatus").value = prevStatus; }catch(e){}
+
+    // Apply filters and render table. If silent, preserve current page and view.
+    if(!silent){
+      document.getElementById("loader").style.display = "none"; // hide loader only on first load
+    }
+    applyFilters(!silent); // resetPage = !silent -> true for non-silent, false for silent
+    document.getElementById("error-msg").textContent = "";
+  } catch(err){
+    console.error("Load sheet error:", err);
+    if(!silent){
+      document.getElementById("error-msg").textContent = "Could not load Google Sheet data.";
+      document.getElementById("loader").style.display = "none";
+  }
+}
+
+}
+
+function applyInitialRender(dataset){
+  // dataset is [header, ...rows]
+  filteredData = dataset;
   currentPage = 1;
-  renderTable(filteredData);
+  renderTable(dataset);
 }
 
-document.getElementById('filterStaff').addEventListener('change', filterTable);
-document.getElementById('filterStatus').addEventListener('change', filterTable);
-document.getElementById('filterProgress').addEventListener('change', filterTable);
-document.getElementById('filterReceivedBy').addEventListener('change', filterTable);
-document.getElementById('searchBox').addEventListener('input', filterTable);
+function hideLoader(){ document.getElementById("loader").style.display = "none"; }
 
-// Export to Excel (uses table in DOM to create sheet)
-document.getElementById('exportExcel').addEventListener('click', ()=>{
-  const table = document.querySelector('#sheet-table table');
-  if(!table){ alert("No table to export"); return; }
+/* Controls wiring */
+document.getElementById("searchBox").addEventListener("input", ()=>{ applyFilters(); });
+document.getElementById("filterStaff").addEventListener("change", applyFilters);
+document.getElementById("filterStatus").addEventListener("change", applyFilters);
+document.getElementById("clearFilters").addEventListener("click", ()=>{
+  document.getElementById("searchBox").value = "";
+  document.getElementById("filterStaff").selectedIndex = 0;
+  document.getElementById("filterStatus").selectedIndex = 0;
+  applyFilters();
+});
+
+/* Export Excel */
+document.getElementById("exportExcel").addEventListener("click", ()=>{
+  const table = document.getElementById("main-table");
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.table_to_sheet(table);
-  XLSX.utils.book_append_sheet(wb, ws, "DuanGraphics");
-  XLSX.writeFile(wb, "DuanGraphics.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "DUAN");
+  XLSX.writeFile(wb, "DUAN_Graphics_Workflow.xlsx");
 });
 
-// Export to PDF (landscape)
-document.getElementById('exportPDF').addEventListener('click', async ()=>{
-  const table = document.querySelector('#sheet-table table');
-  if(!table){ alert("No table to export"); return; }
-  // enlarge scale for clarity
-  const canvas = await html2canvas(table, { scale: 2, useCORS:true });
-  const imgData = canvas.toDataURL('image/png');
+/* Download PDF */
+document.getElementById("downloadPDF").addEventListener("click", async ()=>{
+  const tableWrap = document.querySelector(".table-wrap");
+  const canvas = await html2canvas(tableWrap, { scale: 2 });
+  const img = canvas.toDataURL("image/png");
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'landscape', unit:'px', format:'a4' });
-  const pdfWidth = doc.internal.pageSize.getWidth();
+  const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:'a4' });
+  const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  doc.save('DuanGraphics_Workflow.pdf');
+  pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  pdf.save("DUAN_Graphics_Workflow.pdf");
 });
 
-// Back to top behavior
-const backBtn = document.getElementById('backTop');
-window.addEventListener('scroll', ()=> { backBtn.style.display = window.scrollY > 220 ? 'block' : 'none'; });
-backBtn.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+/* Initial load */
+loadSheet(false);
 
-// Utility: keep table stable when changing pages
-function goToPageAndRender(p){
-  currentPage = p;
-  renderTable(filteredData);
-}
-window.goToPage = function(p){ goToPageAndRender(p); };
+/* Add small scripted enhancement: apply glow and entrance animation once on first load */
+window.addEventListener('load', ()=>{
+  try{
+    const logoWrap = document.querySelector('.logo-circle');
+    const logo = document.getElementById('site-logo');
+    if(logo){
+      // add classes to trigger CSS animations and glow
+      logo.classList.add('animate');
+      // Add glow class a bit after to let entrance start
+      setTimeout(()=>{ logoWrap && logoWrap.classList.add('glow'); }, 140);
+    }
+  }catch(e){/* ignore */}
+});
 
-// initial load + silent refresh every second
-loadSheet();
-setInterval(loadSheet, 1000);
+/* Silent refresh every 3 seconds */
+setInterval(() => {
+    loadSheet(true); // pass a flag to indicate silent refresh
+}, 3000);
+
+
 </script>
 </body>
 </html>
